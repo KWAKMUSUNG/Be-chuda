@@ -9,42 +9,37 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DiagnosticLog = void 0;
+exports.LeakDatabase = void 0;
 const typeorm_1 = require("typeorm");
-let DiagnosticLog = class DiagnosticLog {
+let LeakDatabase = class LeakDatabase {
     id;
-    userName;
-    riskLevel;
-    issueDetails;
-    score;
-    timestamp;
+    name;
+    rrn;
+    email;
+    leakSource;
 };
-exports.DiagnosticLog = DiagnosticLog;
+exports.LeakDatabase = LeakDatabase;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
-], DiagnosticLog.prototype, "id", void 0);
+], LeakDatabase.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], DiagnosticLog.prototype, "userName", void 0);
+], LeakDatabase.prototype, "name", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], DiagnosticLog.prototype, "riskLevel", void 0);
+], LeakDatabase.prototype, "rrn", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
-], DiagnosticLog.prototype, "issueDetails", void 0);
+], LeakDatabase.prototype, "email", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
-    __metadata("design:type", Number)
-], DiagnosticLog.prototype, "score", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
-    __metadata("design:type", Date)
-], DiagnosticLog.prototype, "timestamp", void 0);
-exports.DiagnosticLog = DiagnosticLog = __decorate([
+    __metadata("design:type", String)
+], LeakDatabase.prototype, "leakSource", void 0);
+exports.LeakDatabase = LeakDatabase = __decorate([
     (0, typeorm_1.Entity)()
-], DiagnosticLog);
-//# sourceMappingURL=diagnostic-log.entity.js.map
+], LeakDatabase);
+//# sourceMappingURL=leak-database.entity.js.map

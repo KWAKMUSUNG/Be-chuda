@@ -15,7 +15,7 @@ export default function Home() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('http://localhost:3000/diagnostic/logs');
+      const res = await fetch('http://10.10.70.175:3001/diagnostic/logs');
       const data = await res.json();
       setLogs(data);
     } catch (err) {

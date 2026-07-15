@@ -18,7 +18,7 @@ export declare class DiagnosticController {
         riskLevel: "위험" | "경고" | "주의" | "안전";
         score: number;
         issueDetails: string;
-        vulnerabilities: VulnerabilityTemplate[];
+        vulnerabilities: import("./entities/vulnerability-template.entity").VulnerabilityTemplate[];
         loginAttempts: {
             timestamp: string;
             success: boolean;
