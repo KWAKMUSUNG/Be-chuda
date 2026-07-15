@@ -1,0 +1,825 @@
+'use client';
+import { useState, useEffect } from 'react';
+
+export default function Home() {
+  const [realName, setRealName] = useState('');
+  const [ssn, setSSN] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [logs, setLogs] = useState([]);
+  const [currentResult, setCurrentResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showHero, setShowHero] = useState(true);
+  const [showMyPage, setShowMyPage] = useState(false);
+  const [myPageTab, setMyPageTab] = useState('profile'); // 'profile' | 'checklist'
+
+  const fetchLogs = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/diagnostic/logs');
+      const data = await res.json();
+      setLogs(data);
+    } catch (err) {
+      console.error('로그 조회 실패:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  const handleAnalyze = async () => {
+    if (!realName.trim()) return alert('실명을 입력하세요!');
+    if (!ssn.trim() || ssn.length !== 13) return alert('주민등록번호를 13자리로 입력하세요! (예: 9501011234567)');
+    if (!email.trim()) return alert('이메일을 입력하세요!');
+    
+    setLoading(true);
+
+    try {
+      // Mock 데이터 생성
+      const vulnerabilityScore = Math.floor(Math.random() * 100) + 1;
+      
+      const getRiskLevel = (score) => {
+        if (score <= 10) return { level: '안전', icon: '✅', color: 'green' };
+        if (score <= 30) return { level: '주의', icon: '⚠️', color: 'yellow' };
+        if (score <= 60) return { level: '경고', icon: '⚠️', color: 'orange' };
+        return { level: '위험', icon: '🚨', color: 'red' };
+      };
+
+      const riskInfo = getRiskLevel(vulnerabilityScore);
+
+      const mockData = {
+        score: vulnerabilityScore,
+        riskLevel: riskInfo.level,
+        riskColor: riskInfo.color,
+        realName: realName,
+        email: email,
+        vulnerabilities: vulnerabilityScore >= 31 ? [
+          {
+            title: '법제29조 관련 안전지침 노출',
+            description: 'ID/PW 단순 백단 문제 시 급격한 스팸 위협 정보.',
+            severity: 'HIGH',
+            affected_page: 'https://example-bank.com/login'
+          },
+          {
+            title: '대응 지침 가이드',
+            description: '비밀번호 주기 변경 및 중요 자격증명 2차 인증(MFA) 활성화 권고.',
+            severity: 'HIGH',
+            affected_page: 'Security settings'
+          }
+        ] : [],
+        loginAttempts: vulnerabilityScore >= 31 ? [
+          {
+            country: '🇨🇳 중국',
+            date: new Date(Date.now() - 86400000).toLocaleString(),
+            ip: '58.123.45.67',
+            device: 'iPhone 12 (Safari)',
+            status: '차단됨'
+          },
+          {
+            country: '🇵🇭 필리핀',
+            date: new Date(Date.now() - 172800000).toLocaleString(),
+            ip: '203.104.21.33',
+            device: 'Windows 10 (Chrome)',
+            status: '차단됨'
+          },
+          {
+            country: '🇰🇷 한국',
+            date: new Date(Date.now() - 3600000).toLocaleString(),
+            ip: '203.241.123.45',
+            device: 'Mac OS (Safari)',
+            status: '성공'
+          }
+        ] : [],
+        exposedServices: vulnerabilityScore >= 31 ? [
+          'Gmail',
+          'Naver Mail',
+          'LinkedIn',
+          'GitHub'
+        ] : [],
+        detections: vulnerabilityScore >= 31 ? ['ID 노출', 'PW 유추 가능', '이메일 노출'] : [],
+        log: {
+          riskLevel: riskInfo.level === '안전' ? 'LOW' : riskInfo.level === '주의' ? 'MEDIUM' : 'HIGH',
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      setCurrentResult(mockData);
+      fetchLogs();
+    } catch (err) {
+      console.error('검사 실패:', err);
+      alert('서버 통신 에러가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-gray-100 font-sans">
+      <header className="border-b border-gray-900 py-6 bg-gray-950/80 backdrop-blur sticky top-0 z-10 relative">
+        {/* 헤더 뒤의 빛나는 배경 */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/4 top-1/2 w-64 h-32 bg-teal-500/30 rounded-full filter blur-2xl animate-pulse"></div>
+        </div>
+        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center relative z-10">
+          <div className="flex items-center space-x-3">
+            <span className="text-3xl animate-bounce" style={{animationDuration: '2s'}}>💡</span>
+            <div>
+              <h1 className="text-2xl font-black tracking-wider text-teal-400">Be-chuda</h1>
+              <p className="text-xs text-gray-500">개인정보 노출을 투명하게 비추다</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            {currentResult && (
+              <button 
+                onClick={() => setShowMyPage(true)}
+                className="px-4 py-2 bg-teal-500/10 text-teal-400 rounded-lg border border-teal-500/30 hover:bg-teal-500/20 transition font-semibold text-sm"
+              >
+                👤 마이페이지
+              </button>
+            )}
+            <span className="text-xs bg-teal-500/10 text-teal-400 px-3 py-1.5 rounded-full border border-teal-500/20 font-mono">
+              CPPG Mini-Hackathon 
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* 환하게 비추는 배경 효과 */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-teal-500/20 rounded-full filter blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-32 right-1/3 w-80 h-80 bg-cyan-500/15 rounded-full filter blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+      </div>
+
+      {/* 히어로 섹션 - 초기 랜딩 페이지 */}
+      {showHero ? (
+        <main className="min-h-screen flex items-center justify-center px-6 relative z-10 overflow-hidden">
+          {/* 손전등 빛 효과 - 아래에서 위로 */}
+          <div className="fixed inset-0 pointer-events-none">
+            {/* 손전등 주요 빛 */}
+            <div className="flashlight-effect absolute left-1/2 bottom-0 w-96 h-96 -translate-x-1/2 bg-gradient-to-t from-teal-400/60 via-cyan-400/40 to-transparent rounded-full filter blur-2xl"></div>
+            
+            {/* 손전등 외곽 빛 */}
+            <div className="flashlight-effect absolute left-1/2 bottom-0 w-64 h-64 -translate-x-1/2 bg-gradient-to-t from-teal-300/40 via-cyan-300/20 to-transparent rounded-full filter blur-3xl" style={{animationDelay: '0.2s'}}></div>
+            
+            {/* 손전등 테두리 */}
+            <div className="flashlight-effect absolute left-1/2 bottom-0 w-80 h-80 -translate-x-1/2 border-2 border-teal-400/20 rounded-full filter blur-xl" style={{animationDelay: '0.1s'}}></div>
+          </div>
+
+          {/* 콘텐츠 - 위에 배치 */}
+          <div className="max-w-2xl mx-auto text-center space-y-8 relative z-20">
+            {/* 제목 */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center space-x-2 bg-teal-500/10 px-4 py-2 rounded-full border border-teal-500/30 backdrop-blur">
+                <span className="text-lg">💡</span>
+                <span className="text-teal-400 font-bold text-sm">BE-CHUDA</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl font-black text-white leading-tight drop-shadow-lg">
+                내 계정은 해커들의 <br />
+                <span className="bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent">어둠 속에 안전할까?</span>
+              </h1>
+              
+              <p className="text-gray-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed drop-shadow-md">
+                공개된 정보 속 개인정보 기반 데이터 분석, <br />
+                실시간 위험 분석으로 당신의 계정을 <span className="text-teal-400 font-bold">비추고 보호합니다</span>.
+              </p>
+            </div>
+
+            {/* 선택 버튼들 */}
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button className="px-6 py-2 border border-teal-500/40 text-teal-300 rounded-full hover:bg-teal-500/20 transition font-semibold backdrop-blur drop-shadow-md">
+                무료 진단 추천
+              </button>
+              <button className="px-6 py-2 border border-teal-500/60 text-teal-300 rounded-full hover:bg-teal-500/30 transition font-semibold backdrop-blur drop-shadow-md">
+                실시간 모니터링
+              </button>
+            </div>
+
+            {/* 메인 액션 버튼 */}
+            <button 
+              onClick={() => setShowHero(false)}
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-teal-400 to-cyan-400 hover:from-teal-300 hover:to-cyan-300 text-gray-950 font-bold px-8 py-4 rounded-full transition transform hover:scale-105 active:scale-95 shadow-2xl shadow-teal-500/60 drop-shadow-lg"
+            >
+              <span>🔦 안전 점검 시작하기</span>
+              <span>→</span>
+            </button>
+
+            {/* 팀 이름 표시 */}
+            <p className="text-xs text-teal-400/70 pt-8 font-mono">
+              ✨ Team: Be-chuda (비추다) - 개인정보의 어둠을 밝혀줍니다 ✨
+            </p>
+          </div>
+        </main>
+      ) : (
+        /* 진단 폼 */
+        <main className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-gray-900/40 border border-gray-900 rounded-2xl p-6 md:p-8 relative overflow-hidden group">
+              {/* 카드 뒤의 빛나는 효과 */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <div className="absolute -inset-px bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-2xl blur"></div>
+              </div>
+              <div className="relative z-10">
+                <h2 className="text-xl font-bold mb-4 flex items-center space-x-2">
+                  <span>🔒</span> <span>실시간 개인정보 진단</span>
+                </h2>
+
+                {/* 경고 배너 */}
+                <div className="mb-6 p-4 border border-teal-500/30 bg-teal-500/5 rounded-xl flex items-start space-x-3">
+                  <span className="text-lg flex-shrink-0">🔐</span>
+                  <div className="text-sm text-teal-300">
+                    <p className="font-semibold mb-1">입력된 정보는 서버 전송 직후 안전하게 암호화되어 저장됩니다.</p>
+                    <p className="text-xs text-teal-400/80">당신의 개인정보는 진단 목적으로만 사용됩니다.</p>
+                  </div>
+                </div>
+
+                {/* 2x2 그리드 입력 폼 */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {/* 진단 대상 실명 */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2 font-semibold">진단 대상 실명</label>
+                    <input
+                      type="text"
+                      placeholder="홍길동"
+                      value={realName}
+                      onChange={(e) => setRealName(e.target.value)}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/50 placeholder-gray-600"
+                    />
+                  </div>
+
+                  {/* 주민등록번호 전체 */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2 font-semibold">주민등록번호 13자리</label>
+                    <input
+                      type="text"
+                      placeholder="9501011234567"
+                      value={ssn}
+                      onChange={(e) => setSSN(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                      maxLength={13}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/50 placeholder-gray-600 font-mono"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{ssn.length}/13 자리</p>
+                  </div>
+
+                  {/* 검사 대상 이메일 계정 */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2 font-semibold">검사 대상 이메일 계정</label>
+                    <input
+                      type="email"
+                      placeholder="user@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/50 placeholder-gray-600"
+                    />
+                  </div>
+
+                  {/* 태조 패스워드 패턴 */}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-2 font-semibold">태조 패스워드 패턴</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/50 placeholder-gray-600"
+                    />
+                  </div>
+                </div>
+
+                {/* 실행 버튼 */}
+                <button
+                  onClick={handleAnalyze}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 disabled:from-teal-500/50 disabled:to-cyan-500/50 text-gray-950 font-bold py-3.5 px-6 rounded-xl transition duration-150 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  <span>🔦</span>
+                  <span>{loading ? '안전 점검 및 비추는 중...' : '온디바이스 해시 진단 실행'}</span>
+                </button>
+              </div>
+            </div>
+
+            {currentResult && (
+              <div className="space-y-6">
+                {/* 취약점 지수 - 원형 차트 */}
+                <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-8 relative">
+                  <div className="flex items-center gap-8">
+                    {/* 원형 차트 SVG */}
+                    <div className="flex-shrink-0 relative">
+                      <svg width="180" height="180" viewBox="0 0 180 180" className="transform -rotate-90">
+                        <circle cx="90" cy="90" r="80" fill="none" stroke="#1e3a3a" strokeWidth="12" />
+                        <circle 
+                          cx="90" 
+                          cy="90" 
+                          r="80" 
+                          fill="none" 
+                          stroke={currentResult.riskColor === 'green' ? '#10b981' : currentResult.riskColor === 'yellow' ? '#fbbf24' : currentResult.riskColor === 'orange' ? '#f97316' : '#ef4444'}
+                          strokeWidth="12"
+                          strokeDasharray={`${(currentResult.score / 100) * 502.4} 502.4`}
+                          strokeLinecap="round"
+                          className="transition-all duration-1000"
+                        />
+                      </svg>
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                        <div className="text-3xl font-black" style={{color: currentResult.riskColor === 'green' ? '#10b981' : currentResult.riskColor === 'yellow' ? '#fbbf24' : currentResult.riskColor === 'orange' ? '#f97316' : '#ef4444'}}>
+                          {currentResult.score}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 오른쪽 텍스트 정보 */}
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">취약점 지수</p>
+                        <h3 className="text-2xl font-black text-gray-200">{currentResult.realName} 님의</h3>
+                      </div>
+                       
+                      <div className={`text-lg font-bold flex items-center gap-2 p-3 rounded-lg ${
+                        currentResult.riskColor === 'green' ? 'bg-green-500/10 text-green-400 border border-green-500/30' :
+                        currentResult.riskColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30' :
+                        currentResult.riskColor === 'orange' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30' :
+                        'bg-red-500/10 text-red-400 border border-red-500/30'
+                      }`}>
+                        <span className="text-2xl">{currentResult.riskLevel === '안전' ? '✅' : currentResult.riskLevel === '주의' ? '⚠️' : currentResult.riskLevel === '경고' ? '⚠️' : '🚨'}</span>
+                        <span>
+                          {currentResult.riskLevel === '안전' ? '안전함' : 
+                           currentResult.riskLevel === '주의' ? '주의 필요' : 
+                           currentResult.riskLevel === '경고' ? '경고 단계' : '즉시 조치 필요'}
+                        </span>
+                      </div>
+
+                      {/* 위험 단계 설명 */}
+                      <div className="pt-2 border-t border-gray-700">
+                        <p className="text-xs text-gray-400">
+                          {currentResult.riskLevel === '안전' ? '✅ 좋은 상태입니다. 기본 보안을 유지하세요.' :
+                           currentResult.riskLevel === '주의' ? '⚠️ 일부 취약점이 발견되었습니다. 개선을 권장합니다.' :
+                           currentResult.riskLevel === '경고' ? '⚠️ 주요 취약점이 발견되었습니다. 즉시 대응이 필요합니다.' :
+                           '🚨 심각한 취약점이 발견되었습니다. 긴급 조치가 필요합니다.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 위험 이상일 때만 상세 정보 표시 */}
+                {currentResult.riskLevel !== '안전' && currentResult.riskLevel !== '주의' && (
+                  <>
+                    {/* 노출된 취약점 목록 */}
+                    {currentResult.vulnerabilities && currentResult.vulnerabilities.length > 0 && (
+                      <div className="bg-gray-900/40 border border-red-500/30 rounded-2xl p-6">
+                        <h4 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                          <span>🚨</span> 발견된 주요 취약점
+                        </h4>
+                        <div className="space-y-3">
+                          {currentResult.vulnerabilities.map((vuln, i) => (
+                            <div key={i} className="bg-gray-950/50 border border-red-500/20 rounded-lg p-4">
+                              <div className="flex items-start gap-3">
+                                <span className="text-xl flex-shrink-0">⚠️</span>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-red-300">{vuln.title}</p>
+                                  <p className="text-sm text-gray-400 mt-1">{vuln.description}</p>
+                                  <p className="text-xs text-teal-400 mt-2">관련 페이지: {vuln.affected_page}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 의심스러운 로그인 시도 */}
+                    {currentResult.loginAttempts && currentResult.loginAttempts.length > 0 && (
+                      <div className="bg-gray-900/40 border border-orange-500/30 rounded-2xl p-6">
+                        <h4 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+                          <span>🌍</span> 의심스러운 로그인 시도
+                        </h4>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {currentResult.loginAttempts.map((attempt, i) => (
+                            <div key={i} className="bg-gray-950/50 border border-orange-500/20 rounded-lg p-3 text-sm">
+                              <div className="flex items-center justify-between gap-3 mb-2">
+                                <span className="font-semibold text-orange-300 flex items-center gap-2">
+                                  {attempt.country}
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${attempt.status === '성공' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                                    {attempt.status}
+                                  </span>
+                                </span>
+                              </div>
+                              <p className="text-gray-400 text-xs mb-1">{attempt.date}</p>
+                              <p className="text-gray-500 text-xs">IP: {attempt.ip} | 기기: {attempt.device}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 노출된 서비스 */}
+                    {currentResult.exposedServices && currentResult.exposedServices.length > 0 && (
+                      <div className="bg-gray-900/40 border border-yellow-500/30 rounded-2xl p-6">
+                        <h4 className="text-lg font-bold text-yellow-400 mb-4 flex items-center gap-2">
+                          <span>📱</span> 정보 노출 서비스
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {currentResult.exposedServices.map((service, i) => (
+                            <span key={i} className="px-4 py-2 bg-yellow-500/10 text-yellow-300 border border-yellow-500/30 rounded-full text-sm font-semibold">
+                              {service}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 권장 조치사항 */}
+                    <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/30 rounded-2xl p-6">
+                      <h4 className="text-lg font-bold text-teal-400 mb-4 flex items-center gap-2">
+                        <span>💡</span> 권장 조치사항
+                      </h4>
+                      <ul className="space-y-2 text-sm text-gray-300 mb-6">
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-400 mt-0.5">✓</span>
+                          <span>즉시 비밀번호를 변경하고, 강력한 비밀번호를 사용하세요</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-400 mt-0.5">✓</span>
+                          <span>2단계 인증(2FA/MFA)을 활성화하세요</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-400 mt-0.5">✓</span>
+                          <span>의심스러운 로그인 시도를 거부하고 계정 활동을 모니터링하세요</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-400 mt-0.5">✓</span>
+                          <span>정기적으로 보안 감사를 수행하세요</span>
+                        </li>
+                      </ul>
+
+                      {/* KISA 신고 버튼 */}
+                      <div className="pt-4 border-t border-teal-500/30">
+                        <a 
+                          href="https://www.privacy.kisa.or.kr/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-400 hover:to-orange-400 text-white font-bold px-6 py-3 rounded-lg transition transform hover:scale-105 active:scale-95 shadow-lg shadow-red-500/50"
+                        >
+                          <span>🚨</span>
+                          <span>KISA 개인정보 침해 신고하기</span>
+                          <span>→</span>
+                        </a>
+                        <p className="text-xs text-teal-300 mt-2 text-center">
+                          한국인터넷진흥원(KISA) 개인정보 침해 신고센터로 이동합니다
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 오른쪽 사이드바: 최신 진단 통계 로그 */}
+          <div className="bg-gray-900/20 border border-gray-900 rounded-2xl p-6 h-[600px] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold flex items-center space-x-2">
+                <span>📊</span> <span>최신 진단 통계 로그</span>
+              </h3>
+              <button onClick={fetchLogs} className="text-xs text-teal-400 hover:underline">새로고침</button>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">실시간 수집된 오남용 탐지 위협 이력입니다. (메모리 DB 상태)</p>
+
+            <div className="flex-grow overflow-y-auto space-y-3 pr-1">
+              {logs.map((log) => (
+                <div key={log.id} className="bg-gray-950 border border-gray-900 p-3.5 rounded-xl flex flex-col justify-between hover:border-gray-800 transition">
+                  <div className="flex justify-between items-start mb-1.5">
+                    <span className="text-xs font-semibold text-gray-400">{log.userName}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      log.riskLevel === 'HIGH' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 
+                      log.riskLevel === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 
+                      'bg-green-500/10 text-green-500 border border-green-500/20'
+                    }`}>
+                      {log.riskLevel}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 truncate">{log.issueDetails}</p>
+                  <span className="text-[10px] text-gray-600 mt-2 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* 마이페이지 섹션 */}
+      {showMyPage && (
+        <main className="min-h-screen py-10 px-6 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            {/* 닫기 버튼 */}
+            <button 
+              onClick={() => setShowMyPage(false)}
+              className="mb-6 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition font-semibold text-sm"
+            >
+              ← 진단 페이지로 돌아가기
+            </button>
+
+            {/* 탭 네비게이션 */}
+            <div className="mb-8 flex gap-2 border-b border-gray-800">
+              <button
+                onClick={() => setMyPageTab('profile')}
+                className={`px-6 py-3 font-bold transition border-b-2 ${
+                  myPageTab === 'profile'
+                    ? 'text-teal-400 border-teal-400'
+                    : 'text-gray-500 border-transparent hover:text-gray-300'
+                }`}
+              >
+                👤 프로필 & 지원
+              </button>
+              <button
+                onClick={() => setMyPageTab('checklist')}
+                className={`px-6 py-3 font-bold transition border-b-2 ${
+                  myPageTab === 'checklist'
+                    ? 'text-teal-400 border-teal-400'
+                    : 'text-gray-500 border-transparent hover:text-gray-300'
+                }`}
+              >
+                📋 보안 체크리스트
+              </button>
+            </div>
+
+            {/* 프로필 탭 */}
+            {myPageTab === 'profile' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* 왼쪽: 사용자 정보 및 알림 */}
+                <div className="space-y-6">
+                  {/* 헤더 */}
+                  <div>
+                    <h2 className="text-3xl font-black text-teal-400 mb-2 flex items-center gap-2">
+                      <span>👤</span> 마이페이지
+                    </h2>
+                    <p className="text-gray-400 text-sm">개인정보 관리 및 지원 센터</p>
+                  </div>
+
+                  {/* 가입 정보 */}
+                  <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-teal-400 mb-4">가입 이메일</h3>
+                    <p className="text-xl font-semibold text-teal-300 break-all">{email || 'example@naver.com'}</p>
+                    <p className="text-xs text-gray-500 mt-2">가입된 이메일 주소</p>
+                  </div>
+
+                  {/* 제21조 알림 */}
+                  <div className="bg-teal-500/10 border border-teal-500/30 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400/5 rounded-full -mr-16 -mt-16"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-start gap-3 mb-3">
+                        <span className="text-2xl">🔔</span>
+                        <div>
+                          <h4 className="font-bold text-teal-300">제21조: 개인정보의 즉시 파기</h4>
+                          <p className="text-xs text-teal-400/80 mt-1">정보주체가 요청한 후 기한 정기 저조정 메일 알림</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-teal-300 font-semibold">구독 중 (월간)</p>
+                    </div>
+                  </div>
+
+                  {/* 문제 신고 */}
+                  <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+                      <span>⚠️</span> 문제 신고
+                    </h3>
+                    <p className="text-sm text-gray-300 mb-4">기술, 법률, 상담 관련 문의사항은 아래 연락처로 문의해주세요.</p>
+                    
+                    <div className="space-y-3">
+                      {/* 이메일 */}
+                      <div className="bg-gray-950/50 rounded-lg p-4 border border-gray-800">
+                        <p className="text-xs text-gray-500 mb-1">📧 이메일</p>
+                        <a href="mailto:support@be-chuda.io" className="text-teal-400 font-semibold hover:text-teal-300 transition">
+                          support@be-chuda.io
+                        </a>
+                        <p className="text-xs text-gray-500 mt-1">기술, 법률, 상담 관련</p>
+                      </div>
+
+                      {/* 전화번호 */}
+                      <div className="bg-gray-950/50 rounded-lg p-4 border border-gray-800">
+                        <p className="text-xs text-gray-500 mb-1">📞 전화</p>
+                        <a href="tel:+82-42-000-0000" className="text-teal-400 font-semibold hover:text-teal-300 transition text-lg">
+                          +82-42-000-0000
+                        </a>
+                        <p className="text-xs text-gray-500 mt-1">운영 시간: 평일 09:00 ~ 18:00 (KST)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 오른쪽: 신뢰성 정보 */}
+                <div className="space-y-6">
+                  {/* 신뢰성 배지 */}
+                  <div className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 border border-teal-500/30 rounded-2xl p-8">
+                    <h3 className="text-2xl font-black text-teal-300 mb-6 flex items-center gap-2">
+                      <span>✨</span> 신뢰할 수 있는 서비스
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      {/* 개인정보보호법 */}
+                      <div className="bg-gray-950/40 border border-teal-500/20 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl flex-shrink-0">🛡️</span>
+                          <div>
+                            <h4 className="font-bold text-teal-300 mb-1">개인정보보호법</h4>
+                            <p className="text-sm text-gray-400">제21조: 개인정보의 즉시 파기</p>
+                            <p className="text-xs text-teal-400/80 mt-2">탈취 위협 및 개인정보 즉시 파기 기한 정기 저조정 메일 알림</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 인증 배지 */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-gray-950/40 border border-teal-500/20 rounded-lg p-4 text-center">
+                          <p className="text-xs text-gray-500 mb-1">🔐 데이터 보안</p>
+                          <p className="font-bold text-teal-300">ISO 27001</p>
+                        </div>
+                        <div className="bg-gray-950/40 border border-teal-500/20 rounded-lg p-4 text-center">
+                          <p className="text-xs text-gray-500 mb-1">🌍 국제 표준</p>
+                          <p className="font-bold text-teal-300">GDPR 준수</p>
+                        </div>
+                        <div className="bg-gray-950/40 border border-teal-500/20 rounded-lg p-4 text-center">
+                          <p className="text-xs text-gray-500 mb-1">🔍 투명성</p>
+                          <p className="font-bold text-teal-300">SOC2 Type II</p>
+                        </div>
+                        <div className="bg-gray-950/40 border border-teal-500/20 rounded-lg p-4 text-center">
+                          <p className="text-xs text-gray-500 mb-1">✅ 신뢰도</p>
+                          <p className="font-bold text-teal-300">평가 등급 A+</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 서비스 약관 */}
+                  <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-300 mb-4">📋 법률 정보</h3>
+                    <ul className="space-y-2 text-sm text-gray-400">
+                      <li className="flex items-center gap-2">
+                        <span className="text-teal-400">→</span>
+                        <a href="#" className="hover:text-teal-400 transition">개인정보 처리 방침</a>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-teal-400">→</span>
+                        <a href="#" className="hover:text-teal-400 transition">서비스 이용 약관</a>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-teal-400">→</span>
+                        <a href="#" className="hover:text-teal-400 transition">쿠키 정책</a>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-teal-400">→</span>
+                        <a href="#" className="hover:text-teal-400 transition">보안 정책</a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* 신뢰도 강조 */}
+                  <div className="bg-blue-500/5 border border-blue-500/30 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-400/5 rounded-full -mr-20 -mt-20"></div>
+                    <div className="relative z-10">
+                      <p className="text-sm text-blue-300 font-semibold mb-2">🏢 공식 인증 기관</p>
+                      <p className="text-xs text-blue-400/80">
+                        Be-chuda는 한국인터넷진흥원(KISA) 및 개인정보보호 위원회로부터 공식 인증된 신뢰할 수 있는 서비스입니다.
+                      </p>
+                      <p className="text-xs text-blue-400/80 mt-2">
+                        모든 개인정보는 최고 수준의 암호화로 보호되며, 국제 보안 표준을 준수합니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 보안 체크리스트 탭 */}
+            {myPageTab === 'checklist' && (
+              <div className="space-y-8">
+                {/* 페이지 헤더 */}
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-black text-teal-400 mb-2 flex items-center gap-2">
+                    <span>📋</span> 개인 맞춤형 보안 체크리스트
+                  </h2>
+                  <p className="text-gray-400 text-sm">당신의 계정 보안 상태를 체계적으로 점검하고 개선하세요</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* 왼쪽: 체크리스트 */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h3 className="text-lg font-bold text-teal-300 mb-4">개인정보 보안 수칙</h3>
+                    
+                    {[
+                      { id: 1, title: '강력한 비밀번호 설정', checked: true, priority: 'HIGH', time: '5분', difficulty: '쉬움' },
+                      { id: 2, title: '2단계 인증(2FA) 활성화', checked: true, priority: 'HIGH', time: '10분', difficulty: '보통' },
+                      { id: 3, title: '최근 로그인 기록 확인', checked: true, priority: 'MEDIUM', time: '3분', difficulty: '쉬움' },
+                      { id: 4, title: '접속 기록 주기적 확인', checked: false, priority: 'HIGH', time: '15분', difficulty: '어려움' },
+                      { id: 5, title: '의심 활동 보고', checked: false, priority: 'MEDIUM', time: '5분', difficulty: '쉬움' }
+                    ].map((item) => (
+                      <div key={item.id} className={`border rounded-xl p-4 transition ${
+                        item.checked 
+                          ? 'bg-green-500/5 border-green-500/30' 
+                          : 'bg-gray-900/40 border-gray-800'
+                      }`}>
+                        <div className="flex items-start gap-3">
+                          <div className="pt-1">
+                            <input 
+                              type="checkbox" 
+                              checked={item.checked}
+                              readOnly
+                              className="w-5 h-5 rounded accent-teal-400 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className={`font-bold ${item.checked ? 'text-green-400 line-through' : 'text-gray-200'}`}>
+                                {item.id}. {item.title}
+                              </p>
+                              <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                                item.priority === 'HIGH' 
+                                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                  : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                              }`}>
+                                {item.priority === 'HIGH' ? '🚨 긴급' : '⚠️ 중요'}
+                              </span>
+                            </div>
+                            <div className="flex gap-3 text-xs text-gray-400">
+                              <span>⏱️ {item.time}</span>
+                              <span>📊 난이도: {item.difficulty}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 오른쪽: 진행률 & 가이드 */}
+                  <div className="space-y-6">
+                    {/* 진행률 원형 차트 */}
+                    <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 text-center">
+                      <div className="mb-4">
+                        <svg width="140" height="140" viewBox="0 0 140 140" className="mx-auto">
+                          <circle cx="70" cy="70" r="60" fill="none" stroke="#1e3a3a" strokeWidth="8" />
+                          <circle 
+                            cx="70" 
+                            cy="70" 
+                            r="60" 
+                            fill="none" 
+                            stroke="#14b8a6"
+                            strokeWidth="8"
+                            strokeDasharray={`${(3 / 5) * 376.8} 376.8`}
+                            strokeLinecap="round"
+                            className="transform -rotate-90 origin-center transition-all duration-1000"
+                            style={{transform: 'rotate(-90deg)'}}
+                          />
+                          <text x="70" y="75" textAnchor="middle" className="text-2xl font-black fill-teal-400">
+                            60%
+                          </text>
+                        </svg>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-1">준수율</p>
+                      <p className="text-2xl font-black text-teal-300">3/5 완료</p>
+                      <p className="text-xs text-gray-500 mt-3">2개 항목 남음</p>
+                    </div>
+
+                    {/* 조치 가이드 */}
+                    <div className="space-y-3">
+                      <h4 className="font-bold text-teal-300 mb-3">🎯 다음 조치</h4>
+                      
+                      {[
+                        { icon: '🛡️', title: '기획 정책', desc: '개인 맞춤형 안심 교육', tag: '기획 정책' },
+                        { icon: '⚙️', title: '프론트엔드', desc: '인터렉티브 체크 힐 작용', tag: '프론트엔드' },
+                        { icon: '🔧', title: '백엔드', desc: '개선 권고 가이드 연계', tag: '백엔드' }
+                      ].map((guide, i) => (
+                        <div key={i} className="bg-gray-950/50 border border-teal-500/20 rounded-lg p-4">
+                          <div className="flex items-start gap-2 mb-2">
+                            <span className="text-xl flex-shrink-0">{guide.icon}</span>
+                            <div>
+                              <p className="font-semibold text-teal-300 text-sm">{guide.title}</p>
+                              <p className="text-xs text-gray-500">{guide.desc}</p>
+                            </div>
+                          </div>
+                          <span className="text-xs px-2 py-1 bg-teal-500/10 text-teal-300 border border-teal-500/30 rounded inline-block">
+                            {guide.tag}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 전문가 팁 */}
+                    <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-4">
+                      <p className="text-xs font-bold text-purple-300 mb-2">💡 전문가 팁</p>
+                      <p className="text-xs text-purple-300/80">
+                        모든 체크리스트를 완료하면 특별한 보안 인증서를 받을 수 있습니다!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      )}
+
+      <footer className="border-t border-gray-900 py-8 text-center text-xs text-gray-600 relative z-10">
+        <p>© 2026 Be-chuda. Designed for CPPG Mini Hackathon.</p>
+      </footer>
+    </div>
+  );
+}

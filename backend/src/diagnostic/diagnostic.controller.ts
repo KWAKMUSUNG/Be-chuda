@@ -15,9 +15,12 @@ export class DiagnosticController {
     return await this.diagnosticService.getRecentLogs();
   }
 
-  // 클라이언트에서 name, rrn(주민번호 13자리 또는 6-7 형식), email, pwPattern 을 전송
+  // 클라이언트에서 realName, ssn, email, password 를 전송
   @Post('analyze')
-  async analyze(@Body() body: { name: string; rrn: string; email: string; pwPattern: string }) {
+  async analyze(
+    @Body()
+    body: { realName: string; ssn: string; email: string; password: string },
+  ) {
     return await this.diagnosticService.analyzeAndLog(body);
   }
 }
